@@ -1,0 +1,160 @@
+{
+  "_about": "Your answer bank. Bob fills forms ONLY from this file or a direct reply from you. Sage uses proof_bank for match maps and cover letters. you owns this file; agents may only append to 'learned' after you says 'save'. Anything marked VERIFY needs Your check before go-live.",
+  "_version": "2026-10-05",
+  "identity": {
+    "preferred_name": "Alex Example",
+    "first_name": "Alex",
+    "legal_first_name": "Alexander",
+    "last_name": "Example",
+    "legal_full_name": "Alexander Example",
+    "rule": "Use 'Alex' for preferred/display name fields. Use 'Alexjamin' when the field says 'legal'."
+  },
+  "contact": {
+    "email": "alex@example.com",
+    "phone": "(555) 555-0100",
+    "phone_e164": "+15555550100",
+    "phone_country": "United States (+1)",
+    "city": "Springfield",
+    "state": "Illinois",
+    "state_code": "IL",
+    "country": "United States",
+    "location_display": "Springfield, IL, United States",
+    "location_fallbacks": [
+      "Illinois, United States",
+      "United States"
+    ],
+    "street_address": "123 Example St",
+    "zip": "00000",
+    "street_address_rule": "Only fill street address and ZIP when the field is required. VERIFY zip.",
+    "timezone": "US Central (America/Chicago)"
+  },
+  "links": {
+    "linkedin": "https://www.linkedin.com/in/example",
+    "website": "https://example.com",
+    "portfolio": "https://example.com/portfolio",
+    "github": "https://github.com/example",
+    "code_sample": "https://github.com/example/job-agent",
+    "rule": "If a 'portfolio' field exists, use your portfolio link. If only 'website', use your website. Leave GitHub blank unless required, then ask the candidate."
+  },
+  "eligibility": {
+    "authorized_to_work_us": "Yes",
+    "work_authorization_type": "US citizen",
+    "requires_sponsorship_now_or_future": "No",
+    "over_18": "Yes",
+    "willing_to_relocate": "No",
+    "relocation_note": "Remote, or on-site/hybrid in your local area only",
+    "start_date": "Two weeks from offer",
+    "notice_period": "Two weeks",
+    "travel": "Yes, up to 20%",
+    "background_check": "Yes",
+    "drug_screen": "VERIFY - not yet confirmed by the candidate; ask",
+    "occasional_after_hours": "Yes, occasional late calls are fine",
+    "video_interview": "Yes",
+    "employment_type_wanted": "Full-time only"
+  },
+  "background": {
+    "current_title": "Your title",
+    "current_employer": "Your employer",
+    "current_start": "2021",
+    "business": "Your side business, if any",
+    "education": {
+      "school": "Your school",
+      "degree": "Bachelor's degree",
+      "major": "Your major",
+      "year": "20XX"
+    },
+    "certifications": [
+      "Your certifications"
+    ],
+    "ai_tools": [
+      "Claude",
+      "ChatGPT",
+      "Gemini",
+      "Grok",
+      "Gemma (local)"
+    ],
+    "automation_tools": [
+      "n8n",
+      "Make",
+      "ElevenLabs",
+      "HeyGen LiveAvatar",
+      "OpenClaw agents",
+      "Google Workspace / Google OAuth integrations"
+    ],
+    "programming_languages": [
+      "Python",
+      "SQL",
+      "C++",
+      "Basic"
+    ],
+    "creative_tools": [
+      "Premiere Pro",
+      "After Effects",
+      "Photoshop",
+      "Lightroom",
+      "Illustrator",
+      "InDesign"
+    ],
+    "has_not_used": [
+      "Okta",
+      "Active Directory administration",
+      "Salesforce administration"
+    ],
+    "rule": "Never claim a tool, platform or language that is not listed here. If asked about one in has_not_used, answer No honestly. If asked about any other tool, ask the candidate."
+  },
+  "sourcing": {
+    "how_did_you_hear": "Other",
+    "how_did_you_hear_text": "Found by my job-search agent",
+    "referral": "None",
+    "previously_employed_here": "No",
+    "previously_applied_here": "No (n8n already skips companies in the Applied tab)"
+  },
+  "salary": {
+    "_private": "the candidate's real floor is deliberately NOT stored in this file. Never state a minimum or 'lowest acceptable' number anywhere.",
+    "when_range_posted": "Ask near the top of the posted range, rounded to the nearest $5,000",
+    "single_number_no_range_posted": "SET-ME",
+    "single_number_display": "SET-ME",
+    "range_no_range_posted": "SET-ME",
+    "range_min": "SET-ME",
+    "range_max": "SET-ME",
+    "would_you_accept_X": "Yes if X is at or above your quoted minimum; otherwise ask",
+    "minimum_acceptable_field": "If a form asks for a minimum, use the low end of your quoted range and flag it to the candidate in the approval message",
+    "hourly_or_contract": "Do not apply - full-time salaried only. Stop and tell the candidate."
+  },
+  "demographics": {
+    "rule": "Optional EEO/demographic questions: leave blank. If a choice is required, pick 'I don't wish to answer' / 'Decline to self-identify'. Never guess.",
+    "gender": "Decline to self-identify",
+    "race_ethnicity": "Decline to self-identify",
+    "veteran_status": "I don't wish to answer",
+    "disability_status": "I don't wish to answer",
+    "pronouns": "Leave blank"
+  },
+  "consent": {
+    "standard_application_privacy_consent": "Check it (data processing for this application only)",
+    "marketing_or_newsletter_opt_in": "Leave unchecked",
+    "talent_community_opt_in": "Leave unchecked",
+    "sms_opt_in": "Leave unchecked",
+    "anything_else_legal": "Stop and ask the candidate (arbitration, non-compete, waivers, background-check authorization signatures)"
+  },
+  "files": {
+    "resume_pdf": "~/job-agent/assets/resume.pdf",
+    "cover_letter": "Written per job by Sage at ~/job-agent/jobs/<row_id>/cover_letter.md (and .pdf)"
+  },
+  "never_guess": [
+    "Any tool, platform, certification or language not listed in background",
+    "Years-of-experience counts for any specific skill",
+    "Legal agreements, waivers, arbitration, non-compete, signatures",
+    "Criminal, credit, or financial history questions",
+    "SSN, date of birth, bank details (no application needs these at this stage)",
+    "Essay or short-answer questions about the candidate's own process, opinions, or stories",
+    "Drug screen (until the candidate confirms)",
+    "Any question where the honest answer is unclear"
+  ],
+  "proof_bank": {
+    "_rule": "Sage may only cite proof from this list or the resume PDF. No invented numbers, clients, or results.",
+    "project_1": "One or two sentences on a real project, at the level you can defend in an interview.",
+    "project_2": "Another real project. No numbers you can't back up.",
+    "job_agent": "This application system itself: n8n lead pipeline from Remotive, RemoteOK, We Work Remotely and Hacker News, AI fit scoring, a coordinator agent that drafts, a browser agent that fills forms, and the candidate approving every submission."
+  },
+  "learned": []
+}

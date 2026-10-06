@@ -1,0 +1,193 @@
+{
+  "name": "Job Agent 2 - Send next job to Sage",
+  "nodes": [
+    {
+      "id": "65bf547d-4680-4b16-9755-e20c195febff",
+      "name": "Weekdays 9, 11, 1, 3",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9,11,13,15 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1591370d-f1a4-421d-b4d6-6299e65552a0",
+      "name": "Get all jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5b45aedb-e138-4ad6-8e1a-ba180736d401",
+      "name": "Pick next job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Send Sage the best queued job, one at a time, max CAP per day.\nconst CAP = 3; // raise to 5 after testing\nconst tz = { timeZone: 'America/Chicago' };\nconst today = new Date().toLocaleDateString('en-CA', tz);\nconst yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', tz);\nconst rows = $input.all().map(i => i.json);\nconst busy = ['drafting', 'awaiting_approval', 'waiting_human_check'];\n// A job is \"in flight\" until Sage/Bob report back. Ignore ones stuck since before yesterday.\nif (rows.some(r => busy.includes(r.status) && String(r.dispatched_date || '') >= yesterday)) return [];\nif (rows.filter(r => String(r.dispatched_date || '') === today).length >= CAP) return [];\nconst q = rows.filter(r => r.status === 'queued').sort((a, b) => (Number(b.fit_score) || 0) - (Number(a.fit_score) || 0));\nif (!q.length) return [];\nconst j = q[0];\nreturn [{ json: { job_id: j.job_id, status: 'drafting', dispatched_date: today,\n  apply_url: j.apply_url || j.url, platform: j.platform || 'other', fit_score: j.fit_score } }];"
+      }
+    },
+    {
+      "id": "35484364-6179-4593-aac0-951d3720fab8",
+      "name": "Mark drafting",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "job_id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2be01718-1194-42b8-84d8-d6bcdf72f222",
+      "name": "Build hook message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const j = $('Pick next job').first().json;\nreturn [{ json: { text: `[n8n:apply_job] row=${j.job_id} score=${j.fit_score} platform=${j.platform} url=${j.apply_url}` } }];"
+      }
+    },
+    {
+      "id": "a124985c-c4f8-4be3-af3c-b281de24f841",
+      "name": "Wake Sage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-AGENT-HOST/hooks/agent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.text, name: 'n8n', deliver: true, channel: 'telegram', to: 'YOUR_TELEGRAM_CHAT_ID' }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Weekdays 9, 11, 1, 3": {
+      "main": [
+        [
+          {
+            "node": "Get all jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all jobs": {
+      "main": [
+        [
+          {
+            "node": "Pick next job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick next job": {
+      "main": [
+        [
+          {
+            "node": "Mark drafting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark drafting": {
+      "main": [
+        [
+          {
+            "node": "Build hook message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build hook message": {
+      "main": [
+        [
+          {
+            "node": "Wake Sage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Chicago"
+  },
+  "pinData": {},
+  "meta": {
+    "notes": "Daily cap lives here (CAP in Pick next job). One job in flight at a time."
+  }
+}

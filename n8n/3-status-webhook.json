@@ -1,0 +1,253 @@
+{
+  "name": "Job Agent 3 - Status webhook",
+  "nodes": [
+    {
+      "id": "4aa8ebf3-d55b-41f9-85fc-c1903d1667aa",
+      "name": "POST /job-status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "job-status",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "0f540d96-394c-48cd-81d5-0ab6177db0bd"
+    },
+    {
+      "id": "729e40ac-edaf-40fd-a85b-6f0123844e56",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Only accept known statuses and fields from Sage/Bob.\nconst b = $json.body || {};\nconst allowed = ['queued', 'drafting', 'needs_ben', 'awaiting_approval', 'waiting_human_check', 'submitted', 'skipped', 'failed'];\nif (!b.row_id || !allowed.includes(b.status)) throw new Error('Rejected: missing row_id or unknown status ' + b.status);\nconst f = b.fields || {};\nconst out = { job_id: String(b.row_id), status: b.status };\nfor (const k of ['report_url', 'apply_url', 'platform', 'applied_date']) if (f[k]) out[k] = String(f[k]).slice(0, 500);\nif (b.status === 'submitted' && !out.applied_date) out.applied_date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });\nif (b.note) out.notes = `${new Date().toISOString().slice(0, 10)} ${b.status}: ${b.note}`.slice(0, 500);\nreturn [{ json: out }];"
+      }
+    },
+    {
+      "id": "6f5cbb0f-9a6e-43f9-91a2-70a03f20793c",
+      "name": "Update Jobs row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "job_id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4b1ffcfe-a18a-45cc-9037-16fd5d3e4b2b",
+      "name": "Reply OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "4adb0eaa-bbcf-4d05-844e-4bbbdf7017c6",
+      "name": "Only if submitted",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const v = $('Validate').first().json;\nreturn v.status === 'submitted' ? [{ json: { job_id: v.job_id, applied_date: v.applied_date } }] : [];"
+      }
+    },
+    {
+      "id": "5aeef471-f69a-483a-b38d-56be171532da",
+      "name": "Get the job",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        420
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Jobs",
+          "mode": "name"
+        },
+        "options": {},
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "job_id",
+              "lookupValue": "={{ $json.job_id }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "afdb27cc-e504-49bf-9a10-b944d8150db5",
+      "name": "Applied row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const v = $('Validate').first().json;\nconst r = $input.first().json;\nreturn [{ json: { company: r.company, title: r.title, applied_date: v.applied_date, job_id: v.job_id, url: r.apply_url || r.url } }];"
+      }
+    },
+    {
+      "id": "900036dc-ab96-4eaf-a842-1bdf0e831230",
+      "name": "Add to Applied",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        420
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applied",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "POST /job-status": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Update Jobs row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Jobs row": {
+      "main": [
+        [
+          {
+            "node": "Reply OK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Only if submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only if submitted": {
+      "main": [
+        [
+          {
+            "node": "Get the job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the job": {
+      "main": [
+        [
+          {
+            "node": "Applied row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Applied row": {
+      "main": [
+        [
+          {
+            "node": "Add to Applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Chicago"
+  },
+  "pinData": {},
+  "meta": {
+    "notes": "Sage and Bob POST status updates here. Header auth: X-Job-Agent-Key."
+  }
+}

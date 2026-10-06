@@ -1,0 +1,6 @@
+{
+  "mode": "dry_run",
+  "status_webhook": "https://YOUR-N8N-HOST/webhook/job-status",
+  "status_webhook_key": "SET-ME",
+  "report_base_url": null
+}
